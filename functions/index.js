@@ -54,6 +54,7 @@ exports.saveJokeID = functions.https.onCall(async(data,context) => {
      uid = decodedToken.uid;
      authSuccess = true;
      return Promise;
+    //Test comment
   }).catch(function(error) {
     console.log('Token Auth Failed', data.token);
     // Handle error
