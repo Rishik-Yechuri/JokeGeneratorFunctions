@@ -35,7 +35,7 @@ exports.addToken = functions.https.onCall(async(data, context) => {
  };
 // Send a message to the device corresponding to the provided
 // registration token.
-admin.messaging().send(message)
+await admin.messaging().send(message)
  .then((response) => {
    console.log('Successfully sent message:', response);
    return Promise;
@@ -49,28 +49,44 @@ admin.messaging().send(message)
 exports.saveJokeID = functions.https.onCall(async(data,context) => {
     var authSuccess = false;
     var uid;
-    admin.auth().verifyIdToken(data.token)
+    console.log('place 1');
+    await admin.auth().verifyIdToken(data.token)
   .then(function(decodedToken) {
+    console.log('place 2');
      uid = decodedToken.uid;
+     console.log('place 3');
      authSuccess = true;
+     console.log('place 4');
+     console.log('token verified');
      return Promise;
     //Test comment
   }).catch(function(error) {
     console.log('Token Auth Failed', data.token);
+    console.log('Token is ' + data.token)
     // Handle error
   });
+  //console.log('pre auth:' + authSuccess);
   if(authSuccess === true){
-  await db
+    console.log('post auth');
+    const user = {
+    };
+  var createDoc = false;
+   await db
   .collection(uid)
   .doc('jokeids')
   .get()
   .then((doc) => {
+    console.log('uid value:' + uid);
     if (!doc.exists) {
-      throw new functions.https.HttpsError("invalid-argument", "User doesn't exist in db!");
-    } else {
-        doc.data().update({[data.jokeid]:"true"});
-        return Promise
-    }
+      console.log('In if');
+      createDoc = true;
+      return Promise;
+    } else{return Promise;}
   });
+  console.log('Pre bool check');
+  if(createDoc){
+    await db.collection(uid).doc('jokeids').set(user);
+  }
+  await db.collection(uid).doc('jokeids').update({[data.jokeid]:"true"});
 }
 });
