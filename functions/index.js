@@ -90,3 +90,43 @@ exports.saveJokeID = functions.https.onCall(async(data,context) => {
   await db.collection(uid).doc('jokeids').update({[data.jokeid]:"true"});
 }
 });
+exports.checkIfJokeSaved = functions.https.onCall(async(data,context) => {
+  var uid;
+    console.log('place 1');
+    await admin.auth().verifyIdToken(data.token)
+  .then(function(decodedToken) {
+    console.log('place 2');
+     uid = decodedToken.uid;
+     console.log('place 3');
+     authSuccess = true;
+     console.log('place 4');
+     console.log('token verified');
+     return Promise;
+    //Test comment
+  }).catch(function(error) {
+    console.log('Token Auth Failed', uid);
+    console.log('Token is ' + uid)
+    // Handle error
+  });
+  var jokeStored = false;
+  await db
+  .collection(uid)
+  .doc('jokeids')
+  .get()
+  .then((doc) => {
+    console.log('uid value:' + uid);
+    if (!doc.exists) {
+      console.log('In if');
+      return Promise;
+    } else{
+      var jokeid = data.jokeid;
+      console.log('joke value:' + jokeid);
+       jokeStored = doc.data()[jokeid]
+      //jokeStored = doc.data().j66
+      return Promise;
+    }
+  });
+  return{
+    jokeStored:jokeStored
+  }
+});
