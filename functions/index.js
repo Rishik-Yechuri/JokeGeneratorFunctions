@@ -1,11 +1,15 @@
 const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
+const { Storage } = require('@google-cloud/storage');
 const admin = require('firebase-admin');
 const { firebaseConfig } = require('firebase-functions');
 admin.initializeApp();
 const db = admin.firestore();
 const app = express(); 
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
 exports.addToken = functions.https.onCall(async(data, context) => {
  const user = {
     //"kring":data.token
@@ -88,6 +92,12 @@ exports.saveJokeID = functions.https.onCall(async(data,context) => {
     await db.collection(uid).doc('jokeids').set(user);
   }
   await db.collection(uid).doc('jokeids').update({[data.jokeid]:"true"});
+}
+try{
+ const bucket = admin.storage().bucket('jokegenerator-13008.appspot.com');
+ await db.collection(uid).doc('jokeids').collection('jokes').doc(data.jokeid).set(data.jokejson);
+}catch (e) {
+  console.log('error file', e);
 }
 });
 exports.checkIfJokeSaved = functions.https.onCall(async(data,context) => {
