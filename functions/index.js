@@ -99,18 +99,26 @@ try{
 }catch (e) {
   console.log('error file', e);
 }
+try{
+  var topicToSend = data.token.split('.')[0];
+  var tempMesssage = {
+    data:{
+      actualJSON:JSON.stringify(data.jokejson),
+      purpose:"savejoke"
+    }
+  }
+console.log('pre joke update uid value:',data.token)
+admin.messaging().sendToTopic(topicToSend,tempMesssage);
+}catch(error){
+  console.log('error',error);
+}
 });
 exports.checkIfJokeSaved = functions.https.onCall(async(data,context) => {
   var uid;
-    console.log('place 1');
     await admin.auth().verifyIdToken(data.token)
   .then(function(decodedToken) {
-    console.log('place 2');
      uid = decodedToken.uid;
-     console.log('place 3');
      authSuccess = true;
-     console.log('place 4');
-     console.log('token verified');
      return Promise;
     //Test comment
   }).catch(function(error) {
@@ -138,5 +146,35 @@ exports.checkIfJokeSaved = functions.https.onCall(async(data,context) => {
   });
   return{
     jokeStored:jokeStored
+  }
+});
+exports.deleteJoke = functions.https.onCall(async(data,context) => {
+   var uid;
+   await admin.auth().verifyIdToken(data.token)
+ .then(function(decodedToken) {
+    uid = decodedToken.uid;
+    authSuccess = true;
+    return Promise;
+ }).catch(function(error) {
+   console.log('Token Auth Failed', uid);
+ });
+   await db.collection(uid).doc('jokeids').collection('jokes').doc(data.jokeid).delete();
+   const cityRef = db.collection(uid).doc('jokeids');
+   const FieldValue = admin.firestore.FieldValue;
+   await cityRef.update({
+    [data.jokeid]: FieldValue.delete()
+  });
+  try{
+    var topicToSend = data.token.split('.')[0];
+    var tempMesssage = {
+      data:{
+        jokeid: data.jokejson['id'],
+        purpose:"deletejoke"
+      }
+    }
+  console.log('pre joke update uid value:',data.token)
+  admin.messaging().sendToTopic(topicToSend,tempMesssage);
+  }catch(error){
+    console.log('error',error);
   }
 });
