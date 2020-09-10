@@ -168,13 +168,14 @@ exports.deleteJoke = functions.https.onCall(async(data,context) => {
     var topicToSend = data.token.split('.')[0];
     var tempMesssage = {
       data:{
-        jokeid: data.jokejson['id'],
+        jokeid: data.jokeid,
         purpose:"deletejoke"
       }
     }
-  console.log('pre joke update uid value:',data.token)
+  console.log('token:',data.token)
+  console.log('topic:',topicToSend)
   admin.messaging().sendToTopic(topicToSend,tempMesssage);
   }catch(error){
-    console.log('error',error);
+    console.log('error',error); 
   }
 });
