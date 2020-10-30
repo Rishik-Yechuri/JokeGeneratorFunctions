@@ -179,3 +179,16 @@ exports.deleteJoke = functions.https.onCall(async(data,context) => {
     console.log('error',error); 
   }
 });
+exports.getSavedJokes = functions.https.onCall(async(data,context) => {
+  var uid;
+  await admin.auth().verifyIdToken(data.token)
+.then(function(decodedToken) {
+   uid = decodedToken.uid;
+   return Promise;
+}).catch(function(error) {
+  console.log('Token Auth Failed', uid);
+});
+  db.collection(uid).doc('jokeids').get().then((snapshot) => {
+    console.log(snapshot.data())
+  })
+});
