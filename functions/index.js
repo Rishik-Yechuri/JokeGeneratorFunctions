@@ -105,7 +105,8 @@ try{
     data:{
       actualJSON:JSON.stringify(data.jokejson),
       purpose:"savejoke"
-    }
+    },
+    "time_to_live":2419200
   }
 console.log('pre joke update uid value:',data.token)
 admin.messaging().sendToTopic(topicToSend,tempMesssage);
@@ -170,6 +171,9 @@ exports.deleteJoke = functions.https.onCall(async(data,context) => {
       data:{
         jokeid: data.jokeid,
         purpose:"deletejoke"
+      },
+      "android":{
+        "ttl":"86400s",
       }
     }
   console.log('token:',data.token)
@@ -190,5 +194,8 @@ exports.getSavedJokes = functions.https.onCall(async(data,context) => {
 });
   db.collection(uid).doc('jokeids').get().then((snapshot) => {
     console.log(snapshot.data())
-  })
+    return Promise;
+  }).catch(function(error) {
+    throw error;
+  });
 });
