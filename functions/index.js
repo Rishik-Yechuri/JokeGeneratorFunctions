@@ -10,6 +10,7 @@ const app = express();
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const { stringify } = require('querystring');
 exports.addToken = functions.https.onCall(async(data, context) => {
  const user = {
     //"kring":data.token
@@ -105,8 +106,7 @@ try{
     data:{
       actualJSON:JSON.stringify(data.jokejson),
       purpose:"savejoke"
-    },
-    "time_to_live":2419200
+    }
   }
 console.log('pre joke update uid value:',data.token)
 admin.messaging().sendToTopic(topicToSend,tempMesssage);
@@ -171,9 +171,6 @@ exports.deleteJoke = functions.https.onCall(async(data,context) => {
       data:{
         jokeid: data.jokeid,
         purpose:"deletejoke"
-      },
-      "android":{
-        "ttl":"86400s",
       }
     }
   console.log('token:',data.token)
@@ -192,10 +189,43 @@ exports.getSavedJokes = functions.https.onCall(async(data,context) => {
 }).catch(function(error) {
   console.log('Token Auth Failed', uid);
 });
-  db.collection(uid).doc('jokeids').get().then((snapshot) => {
-    console.log(snapshot.data())
+console.log('Pre get');
+var holdJSON = ""
+await db
+  .collection(uid)
+  .doc('jokeids')
+  .collection('jokes')
+  .get()
+  .then(function(querySnapshot){
+    querySnapshot.docs.forEach(doc => {
+      var tempVar = 'category'
+      console.log("doc from loop:" + doc.data()[tempVar])
+      holdJSON += doc.data().id + " "
+    })
     return Promise;
-  }).catch(function(error) {
-    throw error;
   });
+  return {
+    value:holdJSON
+  }
 });
+
+exports.returnJoke = functions.https.onCall(async(data,context) =>{
+  var uid;
+  await admin.auth().verifyIdToken(data.token)
+.then(function(decodedToken) {
+   uid = decodedToken.uid;
+   return Promise;
+}).catch(function(error) {
+});
+var joke;
+var jokeId = data.id;
+console.log("pre joke get");
+await db.collection(uid).doc('jokeids').collection('jokes').doc(jokeId).get()
+.then(function(doc){
+  joke = doc;
+  return Promise;
+})
+return{
+  value:joke.data()
+}
+})
