@@ -104,6 +104,7 @@ try{
   var topicToSend = data.token.split('.')[0];
   var tempMesssage = {
     data:{
+      position:data.position,
       actualJSON:JSON.stringify(data.jokejson),
       purpose:"savejoke"
     }
