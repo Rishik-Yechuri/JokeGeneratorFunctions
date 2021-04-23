@@ -177,7 +177,7 @@ exports.deleteJoke = functions.https.onCall(async (data, context) => {
         }
         console.log('token:', data.token)
         console.log('topic:', topicToSend)
-        admin.messaging().sendToTopic(topicToSend, tempMesssage);
+        await admin.messaging().sendToTopic(topicToSend, tempMesssage);
     } catch (error) {
         console.log('error', error);
     }
@@ -244,7 +244,7 @@ exports.addGroup = functions.https.onCall(async (data, context) => {
         .then((response) => {
             return Promise;
         })
-        .catch((error) => {
+        .catch((error) => {     
             console.log('Error sending message:', error);
         });
 });
@@ -268,6 +268,7 @@ exports.removeJokeFromGroup = functions.https.onCall(async (data, context) => {
         }).catch(function (error) {
             console.log('Token Auth Failed', uid);
         });
+    console.log("group name:" + data.groupName);
     await db.collection(uid).doc("jokeids").collection("groups").doc(data.groupName).get()
         .then(function (doc) {
             var arrayOfId = ['']
@@ -343,6 +344,30 @@ exports.addJokeToGroup = functions.https.onCall(async (data, context) => {
         savedJokes: finalString
     });
 });
+exports.returnSavedGroups = functions.https.onCall(async (data, context) => {
+    var uid;
+    await admin.auth().verifyIdToken(data.token)
+        .then(function (decodedToken) {
+            uid = decodedToken.uid;
+            return Promise;
+        }).catch(function (error) {
+            console.log('Token Auth Failed', uid);
+        });
+    var savedGroups = new Map([
+        ["",[""]]
+    ]);
+    savedGroups.clear();
+    const snapshot = await db.collection(uid).doc("jokeids").collection("groups").get();
+    snapshot.forEach(doc => {
+        console.log(doc.id, '=>', doc.data());
+        savedGroups.set(doc.id,doc.data().savedJokes);
+    });
+    var finalJSON = {};
+    finalJSON = mapToObj(savedGroups);
+    return {
+        map: JSON.stringify(finalJSON)
+    };
+});
 exports.returnJoke = functions.https.onCall(async (data, context) => {
     var uid;
     await admin.auth().verifyIdToken(data.token)
@@ -363,4 +388,11 @@ exports.returnJoke = functions.https.onCall(async (data, context) => {
     return {
         value: joke.data()
     }
-})
+});
+function mapToObj(map){
+    var obj = {}
+    map.forEach(function(v, k){
+        obj[k] = v
+    })
+    return obj
+}
